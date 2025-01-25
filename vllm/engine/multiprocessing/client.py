@@ -27,6 +27,8 @@ from vllm.engine.multiprocessing import (ENGINE_DEAD_ERROR, IPC_DATA_EXT,
                                          VLLM_RPC_SUCCESS_STR, RPCAbortRequest,
                                          RPCAdapterLoadedResponse, RPCError,
                                          RPCLoadAdapterRequest,
+                                         RPCNumCachedTokensRequest,
+                                         RPCNumCachedTokensResponse,
                                          RPCProcessRequest,
                                          RPCResetPrefixCacheRequest,
                                          RPCStartupRequest, RPCStartupResponse,
@@ -703,3 +705,11 @@ class MQLLMEngineClient(EngineClient):
         # Raise on error, otherwise happily return None
         if isinstance(request_output, BaseException):
             raise request_output
+
+    async def get_num_cached_tokens(self, token_ids: List[int]) -> int:
+        request = RPCNumCachedTokensRequest(token_ids=token_ids)
+        with self.get_data_socket() as socket:
+            return await self._send_get_data_rpc_request(request=request,
+                                                expected_type=int, 
+                                                error_message="get prefix cache",
+                                                socket=socket)

@@ -95,3 +95,6 @@ class PlaceholderBlockSpaceManager(BlockSpaceManager):
 
     def get_num_cached_tokens(self, seq: Sequence) -> int:
         return 0
+    
+    def get_num_cached_tokens(self, token_ids: List[int]) -> int:
+        return 0

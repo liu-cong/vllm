@@ -40,7 +40,9 @@ from vllm.entrypoints.openai.cli_args import (make_arg_parser,
                                               validate_parsed_serve_args)
 # yapf conflicts with isort for this block
 # yapf: disable
-from vllm.entrypoints.openai.protocol import (ChatCompletionRequest,
+from vllm.entrypoints.openai.protocol import (PrefixCacheHitRequest,
+                                              PrefixCacheHitResponse,
+                                              ChatCompletionRequest,
                                               ChatCompletionResponse,
                                               CompletionRequest,
                                               CompletionResponse,
@@ -59,6 +61,7 @@ from vllm.entrypoints.openai.protocol import (ChatCompletionRequest,
                                               RerankRequest, RerankResponse,
                                               ScoreRequest, ScoreResponse,
                                               TokenizeRequest,
+                                              TokenizeCompletionRequest,
                                               TokenizeResponse,
                                               UnloadLoraAdapterRequest)
 # yapf: enable
@@ -347,7 +350,6 @@ async def tokenize(request: TokenizeRequest, raw_request: Request):
 
     assert_never(generator)
 
-
 @router.post("/detokenize")
 @with_cancellation
 async def detokenize(request: DetokenizeRequest, raw_request: Request):
@@ -376,6 +378,22 @@ async def show_version():
     ver = {"version": VLLM_VERSION}
     return JSONResponse(content=ver)
 
+
+@router.post("/prefix_cache_hit")
+async def prefix_cache_hit(request: PrefixCacheHitRequest, raw_request: Request):
+    logger.info(f"========prefix cache hit for {request}")
+    # First, tokenize the input
+    tokenizeRequest = TokenizeCompletionRequest(model=request.model, prompt=request.prompt)
+    generator = await tokenization(raw_request).create_tokenize(tokenizeRequest, raw_request)
+    if isinstance(generator, ErrorResponse):
+        return JSONResponse(content=generator.model_dump(),
+                            status_code=generator.code)
+    elif isinstance(generator, TokenizeResponse):
+        token_ids = generator.tokens
+        logger.info(f"========Tokenized {request}: {token_ids}")
+        hit = await raw_request.app.state.engine_client.get_num_cached_tokens(token_ids)
+        logger.info(f"====cache hit: {hit}")
+        return PrefixCacheHitResponse(hit=hit)
 
 @router.post("/v1/chat/completions")
 @with_cancellation
@@ -834,6 +852,7 @@ def create_server_socket(addr: Tuple[str, int]) -> socket.socket:
 async def run_server(args, **uvicorn_kwargs) -> None:
     logger.info("vLLM API server version %s", VLLM_VERSION)
     logger.info("args: %s", args)
+    logger.info("====Running prefix patch")
 
     if args.tool_parser_plugin and len(args.tool_parser_plugin) > 3:
         ToolParserManager.import_tool_parser(args.tool_parser_plugin)

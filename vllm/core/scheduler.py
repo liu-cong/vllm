@@ -1661,6 +1661,9 @@ class Scheduler:
 
         return self.scheduler_config.num_lookahead_slots
 
+    def get_num_cached_tokens(self, token_ids: List[int]) -> int:
+        return self.block_manager.get_num_cached_tokens(token_ids)
+    
     def _get_num_new_uncached_and_cached_tokens(
         self,
         seq_group: SequenceGroup,

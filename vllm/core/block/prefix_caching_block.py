@@ -1017,7 +1017,43 @@ class ComputedBlocksTracker:
             prev_block_hash = block_hash
 
         self._seq_id_to_blocks_hashes[seq.seq_id] = block_hashes_recorded
+    
+    def get_num_cached_tokens(self, token_ids: List[int]) -> int:
+        """Get number of cached tokens for a list of tokens, instead of a sequence"""
+        assert self._enable_caching
 
+        block_hashes_recorded = []
+        # Update the computed block hashes for the sequence. Since only full
+        # blocks are considered as "computed", we take floor here.
+        num_computed_blocks = len(token_ids) // self._block_size
+
+        # We need to know the hash of the previous block to compute the hash of
+        # the current block so that blocks could be uniquely identified across
+        # sequences of prefixes.
+        prev_block_hash = None
+        # Only update the computed block hashes for the new blocks
+        for i in range(0, num_computed_blocks):
+            assert len(token_ids) >= (i + 1) * self._block_size
+            block_token_ids = token_ids[i * self._block_size:(i + 1) *
+                                        self._block_size]
+
+            # This has to be kept in sync with the allocator's hash
+            # calculation.
+            block_hash = PrefixCachingBlock.hash_block_tokens(
+                is_first_block=prev_block_hash is None,
+                prev_block_hash=prev_block_hash,
+                cur_block_token_ids=block_token_ids,
+                extra_hash=None,
+            )
+            block_hashes_recorded.append(block_hash)
+            prev_block_hash = block_hash
+
+         # This is O(logN), where N is the number of blocks.
+        num_cached_blocks = len(
+            self._allocator.find_cached_blocks_prefix(block_hashes_recorded))
+        num_cached_tokens = num_cached_blocks * self._block_size
+        return num_cached_tokens
+    
     def get_num_cached_tokens(self, seq: Sequence) -> int:
         if not self._enable_caching:
             return 0

@@ -55,6 +55,12 @@ class OpenAIServingCompletion(OpenAIServing):
                 "Overwriting default completion sampling param with: %s",
                 diff_sampling_param)
 
+    async def get_num_cached_tokens(self, token_ids: List[int]) -> int:
+        """Get the number of tokens in blocks that are already computed and
+        cached in the block manager for the sequence.
+        """
+        return self.engine_client.get_num_cached_tokens(token_ids)
+
     async def create_completion(
         self,
         request: CompletionRequest,

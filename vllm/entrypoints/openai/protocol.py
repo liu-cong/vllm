@@ -1383,6 +1383,12 @@ class TokenizeChatRequest(OpenAIBaseModel):
 
 TokenizeRequest = Union[TokenizeCompletionRequest, TokenizeChatRequest]
 
+class PrefixCacheHitRequest(OpenAIBaseModel):
+    model: str
+    prompt: str
+
+class PrefixCacheHitResponse(OpenAIBaseModel):
+    hit: int
 
 class TokenizeResponse(OpenAIBaseModel):
     count: int

@@ -517,3 +517,9 @@ class SelfAttnBlockSpaceManager(BlockSpaceManager):
         cached in the block manager for the sequence.
         """
         return self._computed_blocks_tracker.get_num_cached_tokens(seq)
+
+    def get_num_cached_tokens(self, token_ids: List[int]) -> int:
+        """Get the number of tokens in blocks that are already computed and
+        cached in the block manager for the sequence.
+        """
+        return self._computed_blocks_tracker.get_num_cached_tokens(token_ids)

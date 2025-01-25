@@ -131,11 +131,17 @@ class RPCLoadAdapterRequest:
     # Set the default value of request_id to a new UUID
     request_id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
-
 @dataclass
 class RPCAdapterLoadedResponse:
     request_id: str
 
+@dataclass
+class RPCNumCachedTokensRequest:
+    token_ids: List[int]
+    
+@dataclass
+class RPCNumCachedTokensResponse:
+    hit: int
 
 RPC_REQUEST_T = Union[RPCProcessRequest, RPCAbortRequest, RPCStartupRequest,
                       RPCUProfileRequest, RPCLoadAdapterRequest,

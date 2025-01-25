@@ -130,3 +130,7 @@ class BlockSpaceManager(ABC):
     @abstractmethod
     def get_num_cached_tokens(self, seq: Sequence) -> int:
         pass
+    
+    @abstractmethod
+    def get_num_cached_tokens(self, token_ids: List[int]) -> int:
+        pass

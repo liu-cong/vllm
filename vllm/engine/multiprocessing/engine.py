@@ -16,6 +16,8 @@ from vllm.engine.multiprocessing import (ENGINE_DEAD_ERROR, IPC_DATA_EXT,
                                          VLLM_RPC_SUCCESS_STR, RPCAbortRequest,
                                          RPCAdapterLoadedResponse, RPCError,
                                          RPCLoadAdapterRequest,
+                                         RPCNumCachedTokensRequest,
+                                         RPCNumCachedTokensResponse,
                                          RPCProcessRequest,
                                          RPCResetPrefixCacheRequest,
                                          RPCStartupRequest, RPCStartupResponse,
@@ -117,7 +119,7 @@ class MQLLMEngine:
         executor_class = LLMEngine._get_executor_cls(engine_config)
 
         use_async_sockets = engine_config.model_config.use_async_output_proc
-
+        logger.info(f"=====use_async_sockets:{use_async_sockets}")
         return cls(ipc_path=ipc_path,
                    use_async_sockets=use_async_sockets,
                    vllm_config=engine_config,
@@ -238,6 +240,9 @@ class MQLLMEngine:
                         self.stop_profile()
                 elif isinstance(request, RPCLoadAdapterRequest):
                     self._handle_load_adapter_request(request)
+                elif isinstance(request, RPCNumCachedTokensRequest):
+                    logger.info("Calling _handle_num_cached_tokens_request")
+                    self._handle_num_cached_tokens_request(request)
                 elif isinstance(request, RPCResetPrefixCacheRequest):
                     self.reset_prefix_cache()
                 else:
@@ -303,6 +308,12 @@ class MQLLMEngine:
         # Otherwise, send back the successful load message
         self._send_outputs(
             RPCAdapterLoadedResponse(request_id=request.request_id))
+        
+    def _handle_num_cached_tokens_request(self, request: RPCNumCachedTokensRequest):
+        logger.info(f"_handle_num_cached_tokens_request:{request}")
+        hit = self.engine.get_num_cached_tokens(request.token_ids)
+        self._send_outputs(
+            RPCAdapterLoadedResponse(hit=hit))
 
     def _health_check(self):
         # Send unhealthy if engine has already errored

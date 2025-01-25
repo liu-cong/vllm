@@ -280,3 +280,7 @@ class EngineClient(ABC):
     async def add_lora(self, lora_request: LoRARequest) -> None:
         """Load a new LoRA adapter into the engine for future requests."""
         ...
+
+    @abstractmethod
+    async def get_num_cached_tokens(self, token_ids: List[int]) -> int:
+        ...

@@ -263,6 +263,9 @@ class _AsyncLLMEngine(LLMEngine):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+    
+    async def get_num_cached_tokens(self, token_ids: List[int]) -> int:
+        return self.scheduler[0].get_num_cached_tokens(token_ids)
 
     async def step_async(
         self, virtual_engine: int
@@ -1150,6 +1153,9 @@ class AsyncLLMEngine(EngineClient):
     async def get_lora_config(self) -> LoRAConfig:
         """Get the lora configuration of the vLLM engine."""
         return self.engine.get_lora_config()
+
+    async def get_num_cached_tokens(self, token_ids: List[int]) -> int:
+        return self.engine.get_num_cached_tokens(token_ids)
 
     async def do_log_stats(
             self,

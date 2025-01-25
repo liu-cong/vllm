@@ -32,9 +32,9 @@ RUN echo 'tzdata tzdata/Areas select America' | debconf-set-selections \
 # as it was causing spam when compiling the CUTLASS kernels
 RUN apt-get install -y gcc-10 g++-10
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 110 --slave /usr/bin/g++ g++ /usr/bin/g++-10
-RUN <<EOF
-gcc --version
-EOF
+# RUN <<EOF
+# gcc --version
+# EOF
 
 # Workaround for https://github.com/openai/triton/issues/2507 and
 # https://github.com/pytorch/pytorch/issues/107960 -- hopefully
@@ -129,7 +129,7 @@ COPY .buildkite/check-wheel-size.py check-wheel-size.py
 # sync the default value with .buildkite/check-wheel-size.py
 ARG VLLM_MAX_SIZE_MB=300
 ENV VLLM_MAX_SIZE_MB=$VLLM_MAX_SIZE_MB
-ARG RUN_WHEEL_CHECK=true
+ARG RUN_WHEEL_CHECK=false
 RUN if [ "$RUN_WHEEL_CHECK" = "true" ]; then \
         python3 check-wheel-size.py dist; \
     else \

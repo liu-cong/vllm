@@ -1252,6 +1252,9 @@ class LLMEngine:
                 else:
                     seq.append_token_id(sample.output_token, sample.logprobs)
 
+    def get_num_cached_tokens(self, token_ids: List[int]) -> int:
+        return self.scheduler[0].get_num_cached_tokens(token_ids)
+
     def step(self) -> List[Union[RequestOutput, PoolingRequestOutput]]:
         """Performs one decoding iteration and returns newly generated results.
 
@@ -1543,6 +1546,9 @@ class LLMEngine:
             for logger in self.stat_loggers.values():
                 logger.log(stats)
 
+    def get_num_cached_tokens(self, token_ids: List[int]) -> int:
+        return self.scheduler.get_num_cached_tokens(token_ids)
+    
     def _get_stats(self,
                    scheduler_outputs: Optional[SchedulerOutputs],
                    model_output: Optional[List[SamplerOutput]] = None,
