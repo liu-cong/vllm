@@ -7,6 +7,7 @@ import hashlib
 import importlib
 import inspect
 import json
+import logging
 import multiprocessing
 import multiprocessing.forkserver as forkserver
 import os
@@ -1835,9 +1836,11 @@ def validate_api_server_args(args):
 def setup_server(args):
     """Validate API server args, set up signal handler, create socket
     ready to serve."""
-
+    logger.info("======Test")
     logger.info("vLLM API server version %s", VLLM_VERSION)
+    logger.info("======Test")
     log_non_default_args(args)
+    logger.info("======Test")
 
     if args.tool_parser_plugin and len(args.tool_parser_plugin) > 3:
         ToolParserManager.import_tool_parser(args.tool_parser_plugin)
@@ -1883,6 +1886,11 @@ async def run_server(args, **uvicorn_kwargs) -> None:
     listen_address, sock = setup_server(args)
     await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
 
+class EndpointFilter(logging.Filter):
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.getMessage().find("GET /health") == -1 and \
+            record.getMessage().find("GET /metrics") == -1
 
 async def run_server_worker(listen_address,
                             sock,
@@ -1898,6 +1906,8 @@ async def run_server_worker(listen_address,
     log_config = load_log_config(args.log_config_file)
     if log_config is not None:
         uvicorn_kwargs['log_config'] = log_config
+
+    logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 
     async with build_async_engine_client(
             args,
